@@ -126,3 +126,6 @@ f, ax = plt.subplots(figsize=(20, 9))
 sns.heatmap(corrmat, vmax=0.8, square=True)
 plt.title(u"各个属性的关系矩阵")
 plt.show()
+
+
+增加修改
