@@ -120,12 +120,11 @@ for index in range(2):
     data = pd.concat([data_train['SalePrice'], data_train[var[index]]], axis=1)
     data.plot.scatter(x=var[index], y='SalePrice', ylim=(0, 800000))
 
+
+
 #各个属性的关系矩阵
 corrmat = data_train.corr()
 f, ax = plt.subplots(figsize=(20, 9))
 sns.heatmap(corrmat, vmax=0.8, square=True)
 plt.title(u"各个属性的关系矩阵")
 plt.show()
-
-
-youyouyouyou增加修改
