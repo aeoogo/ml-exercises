@@ -15,6 +15,7 @@ import warnings
 from scipy import stats
 from scipy.stats import  norm
 from sklearn.preprocessing import StandardScaler
+from pandas import Series, DataFrame
 
 def clear():
     os.system('cls')
@@ -37,6 +38,7 @@ clear()
 
 #房屋价格描述
 print("SalePrice describe:",data_train['SalePrice'].describe(),"\n")
+#print(data_train.describe())
 input("press any key to continue......\n")
 clear()
 
@@ -70,12 +72,13 @@ plt.show()
 
 #房价对于建造年份的箱型图
 # YearBuilt boxplot
-var = 'YearBuilt'
-data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
-f, ax = plt.subplots(figsize=(26, 12))
-fig = sns.boxplot(x=var, y="SalePrice", data=data)
-fig.axis(ymin=0, ymax=800000);
-plt.title(u"房价对于建造年份的箱型图")
+#var = 'YearBuilt'
+#data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
+#f, ax = plt.subplots(figsize=(26, 12))
+#fig = sns.boxplot(x=var, y="SalePrice", data=data)
+#fig.axis(ymin=0, ymax=800000);
+#plt.title(u"房价对于建造年份的箱型图")
+#plt.show()
 
 #房价对于建造年份的散点图
 # YearBuilt  scatter
@@ -97,28 +100,44 @@ plt.title(u"房价对于地段的箱型图")
 plt.show()
 
 
+
+# 房价对于地表面积的散点图
 var  = 'LotArea'
 data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
 data.plot.scatter(x=var, y='SalePrice', ylim=(0, 800000))
+plt.title(u"房价对于地表面积的散点图")
+plt.show()
 
-
+#房价对于GrLivArea的散点图 
 var  = 'GrLivArea'
 data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
 data.plot.scatter(x=var, y='SalePrice', ylim=(0, 800000))
+plt.title(u"房价对于Grlivarea的散点图")
+plt.show()
 
+
+#房价与TotalBsmtSF之间的散点图
 var  = 'TotalBsmtSF'
 data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
 data.plot.scatter(x=var, y='SalePrice', ylim=(0, 800000))
+plt.title(u"房价与totalbsmtsf之间的散点图")
+plt.show()
 
+#房价与MiscVal之间的散点图
 var  = 'MiscVal'
 data = pd.concat([data_train['SalePrice'], data_train[var]], axis=1)
 data.plot.scatter(x=var, y='SalePrice', ylim=(0, 800000))
+plt.title(u"房价与Miscval之间的散点图")
+plt.show()
+
+
 
 var  = ['GarageArea', 'GarageCars']
 for index in range(2):
     data = pd.concat([data_train['SalePrice'], data_train[var[index]]], axis=1)
     data.plot.scatter(x=var[index], y='SalePrice', ylim=(0, 800000))
-
+    plt.title(u"房价与"+var[index]+u"之间的关系")
+    plt.show()
 
 
 #各个属性的关系矩阵
@@ -144,22 +163,20 @@ plt.show()
 
 
 
-
 #与价格相关性最大的10个特征
 k  = 10 # 关系矩阵中将显示10个特征
 cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
 cm = np.corrcoef(data_train[cols].values.T)
 sns.set(font_scale=1.25)
 hm = sns.heatmap(cm, cbar=True, annot=True,square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
-#plt.title(u"与价格相关性最大的是十个特征")
-plt.title(u"各个属性的关系矩阵（包含离散性数据）")
+plt.title("ten most relevant features")
 plt.show()
 
 
 #绘制选择的特征的关系点图
 sns.set()
 cols = ['SalePrice','OverallQual','GrLivArea', 'GarageCars','TotalBsmtSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
-sns.pairplot(data_train[cols], size = 2.5)
+sns.pairplot(data_train[cols], size = 1.5)
 plt.title(u"选择的特征的关系点图")
 plt.show()
 
@@ -195,3 +212,83 @@ for clf in clfs:
     except Exception as e:
         print(clf + " Error:")
         print(str(e))
+
+
+
+#未归一化的预测结果
+cols = ['OverallQual','GrLivArea', 'GarageCars','TotalBsmtSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
+x = data_train[cols].values
+y = data_train['SalePrice'].values
+X_train,X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+
+clf = RandomForestRegressor(n_estimators=400)
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+print(u"未归一化的验证集数据预测结果\n")
+print(y_pred)
+print(u"验证集数据实际价格\n")
+print(y_test)
+
+
+
+vali_result = pd.concat([DataFrame(y_pred,columns=['predict']),DataFrame(y_test,columns=['actual'])], axis=1)
+vali_result.to_csv('../data/Validation-Prediction.csv', index=False)
+
+
+
+
+
+print("平均绝对误差:",sum(abs(y_pred - y_test))/len(y_pred))
+print("\n")
+
+
+
+
+
+#验证测试集数据
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+
+# 之前训练的模型
+rfr = clf
+
+data_test = pd.read_csv("../data/test.csv")
+data_test[cols].isnull().sum()
+
+
+
+data_test['GarageCars'].describe()
+data_test['TotalBsmtSF'].describe()
+
+
+
+cols2 = ['OverallQual','GrLivArea', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
+cars = data_test['GarageCars'].fillna(1.766118)
+bsmt = data_test['TotalBsmtSF'].fillna(1046.117970)
+data_test_x = pd.concat( [data_test[cols2], cars, bsmt] ,axis=1)
+data_test_x.isnull().sum()
+
+
+
+x = data_test_x.values
+y_te_pred = rfr.predict(x)
+print(y_te_pred)
+
+print(y_te_pred.shape)
+print(x.shape)
+
+
+
+prediction = pd.DataFrame(y_te_pred, columns=['SalePrice'])
+result = pd.concat([ data_test['Id'], prediction,], axis=1)
+# result = result.drop(resultlt.columns[0], 1)
+result.columns
+
+
+
+
+result.to_csv('../data/Predictions.csv', index=False)
+
+
+
+
