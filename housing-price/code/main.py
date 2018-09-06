@@ -12,7 +12,6 @@ import numpy as np
 import seaborn as sns
 import os
 import warnings
-
 from scipy import stats
 from scipy.stats import  norm
 from sklearn.preprocessing import StandardScaler
@@ -128,3 +127,71 @@ f, ax = plt.subplots(figsize=(20, 9))
 sns.heatmap(corrmat, vmax=0.8, square=True)
 plt.title(u"各个属性的关系矩阵")
 plt.show()
+
+
+
+#各个属性的关系矩阵（包含离散型数据）
+from sklearn import preprocessing
+f_names = ['CentralAir', 'Neighborhood']
+for x in f_names:
+    label = preprocessing.LabelEncoder()
+    data_train[x] = label.fit_transform(data_train[x])
+corrmat = data_train.corr()
+f, ax = plt.subplots(figsize=(20, 9))
+sns.heatmap(corrmat, vmax=0.8, square=True)
+plt.title(u"各个属性的关系矩阵（包含离散性数据）")
+plt.show()
+
+
+
+
+#与价格相关性最大的10个特征
+k  = 10 # 关系矩阵中将显示10个特征
+cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
+cm = np.corrcoef(data_train[cols].values.T)
+sns.set(font_scale=1.25)
+hm = sns.heatmap(cm, cbar=True, annot=True,square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+#plt.title(u"与价格相关性最大的是十个特征")
+plt.title(u"各个属性的关系矩阵（包含离散性数据）")
+plt.show()
+
+
+#绘制选择的特征的关系点图
+sns.set()
+cols = ['SalePrice','OverallQual','GrLivArea', 'GarageCars','TotalBsmtSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
+sns.pairplot(data_train[cols], size = 2.5)
+plt.title(u"选择的特征的关系点图")
+plt.show()
+
+
+
+
+
+from sklearn import preprocessing
+from sklearn import linear_model, svm, gaussian_process
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.cross_validation import train_test_split
+import numpy as np
+
+# 获取数据
+cols = ['OverallQual','GrLivArea', 'GarageCars','TotalBsmtSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
+x = data_train[cols].values
+y = data_train['SalePrice'].values
+x_scaled = preprocessing.StandardScaler().fit_transform(x)
+y_scaled = preprocessing.StandardScaler().fit_transform(y.reshape(-1,1))
+X_train,X_test, y_train, y_test = train_test_split(x_scaled, y_scaled, test_size=0.33, random_state=42)
+
+
+clfs = {
+        'svm':svm.SVR(), 
+        'RandomForestRegressor':RandomForestRegressor(n_estimators=400),
+        'BayesianRidge':linear_model.BayesianRidge()
+       }
+for clf in clfs:
+    try:
+        clfs[clf].fit(X_train, y_train)
+        y_pred = clfs[clf].predict(X_test)
+        print(clf + " cost:" + str(np.sum(abs(y_pred-y_test))/len(y_pred)) )
+    except Exception as e:
+        print(clf + " Error:")
+        print(str(e))
